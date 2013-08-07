@@ -6,3 +6,7 @@
 *.csproj
 *.unityproj
 *.sln
+/server/node_modules/
+/unity/unity.userprefs
+
+/unity/*.pidb
