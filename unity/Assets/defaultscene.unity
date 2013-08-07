@@ -74,20 +74,20 @@ NavMeshSettings:
     widthInaccuracy: 16.666666
     heightInaccuracy: 10
   m_NavMesh: {fileID: 0}
---- !u!1 &278874526
+--- !u!1 &1925077872
 GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   serializedVersion: 4
   m_Component:
-  - 4: {fileID: 278874532}
-  - 20: {fileID: 278874531}
-  - 92: {fileID: 278874530}
-  - 124: {fileID: 278874529}
-  - 81: {fileID: 278874528}
-  - 114: {fileID: 278874527}
-  - 114: {fileID: 278874533}
+  - 4: {fileID: 1925077877}
+  - 20: {fileID: 1925077876}
+  - 92: {fileID: 1925077875}
+  - 124: {fileID: 1925077874}
+  - 81: {fileID: 1925077873}
+  - 114: {fileID: 1925077878}
+  - 114: {fileID: 1925077879}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -95,46 +95,33 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &278874527
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 278874526}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0070dad6e9eb21a48842984994b011ae, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  host: http://192.168.1.70:9999/echo/
-  sockjs: {fileID: 278874533}
---- !u!81 &278874528
+--- !u!81 &1925077873
 AudioListener:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 278874526}
+  m_GameObject: {fileID: 1925077872}
   m_Enabled: 1
---- !u!124 &278874529
+--- !u!124 &1925077874
 Behaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 278874526}
+  m_GameObject: {fileID: 1925077872}
   m_Enabled: 1
---- !u!92 &278874530
+--- !u!92 &1925077875
 Behaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 278874526}
+  m_GameObject: {fileID: 1925077872}
   m_Enabled: 1
---- !u!20 &278874531
+--- !u!20 &1925077876
 Camera:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 278874526}
+  m_GameObject: {fileID: 1925077872}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
@@ -157,25 +144,38 @@ Camera:
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_HDR: 0
---- !u!4 &278874532
+--- !u!4 &1925077877
 Transform:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 278874526}
+  m_GameObject: {fileID: 1925077872}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
---- !u!114 &278874533
+--- !u!114 &1925077878
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 278874526}
+  m_GameObject: {fileID: 1925077872}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e5af8282c0d9cbd4480094f0a3a38a0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1925077879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1925077872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0070dad6e9eb21a48842984994b011ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  host: http://192.168.1.70:9999/echo/
+  sockjs: {fileID: 1925077878}
