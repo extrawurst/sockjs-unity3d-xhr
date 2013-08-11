@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Security.Cryptography;
+using System.Text;
+using UnityEngine;
 using System.Collections;
 
 public class SockjsClient : MonoBehaviour {
@@ -40,21 +42,20 @@ public class SockjsClient : MonoBehaviour {
 	}
 	
 	// Use this for initialization
-	void Start () {
+	public void Start () {
 		
 		m_sendHeader["Content-Type"] = "application/xml";
 	}
 	
 	public void Connect(string _host)
 	{
-		var server_id = Random.Range(0,999);
+		var serverId = Random.Range(0,999);
 		
-		var session_id_rnd = Random.Range(0,100000000);
+		var sessionIdRnd = Random.Range(0,100000000);
 		
-		var session_id = System.DateTime.UtcNow.ToLongTimeString() + '-' + session_id_rnd;
+		var sessionId = System.DateTime.UtcNow.ToLongTimeString() + '-' + sessionIdRnd;
 		
-		//TODO: correct hashing
-		m_xhr = _host + string.Format ("{0:000}/{1}/xhr",server_id, session_id.GetHashCode());
+		m_xhr = _host + string.Format("{0:000}/{1}/xhr", serverId, GetHashString(sessionId));
 		
 		if(m_state == ConnectionState.disconnected)
 		{
@@ -63,22 +64,37 @@ public class SockjsClient : MonoBehaviour {
 			StartCoroutine(Polling());
 		}
 	}
-	
+
 	public void Disconnect()
 	{
-		if(m_state != ConnectionState.disconnected)
+		if (m_state != ConnectionState.disconnected)
 		{
 			m_state = ConnectionState.disconnected;
-			
+
 			StartCoroutine(Polling());
 		}
 	}
-	
+
 	public void SendData(string _payload)
 	{
-		var www = new WWW(m_xhr+"_send", StringToByteArray(string.Format("[\"{0}\"]",_payload)), m_sendHeader);
-		
-		StartCoroutine(WaitforRequest(www,null));
+		var www = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[\"{0}\"]", _payload)), m_sendHeader);
+
+		StartCoroutine(WaitforRequest(www, null));
+	}
+
+	private static byte[] GetHash(string _inputString)
+	{
+		HashAlgorithm algorithm = MD5.Create();
+		return algorithm.ComputeHash(Encoding.UTF8.GetBytes(_inputString));
+	}
+
+	private static string GetHashString(string _inputString)
+	{
+		var sb = new StringBuilder();
+		foreach (byte b in GetHash(_inputString))
+			sb.Append(b.ToString("X2"));
+
+		return sb.ToString();
 	}
 	
 	private IEnumerator Polling()
@@ -176,13 +192,7 @@ public class SockjsClient : MonoBehaviour {
 	
 	private static byte[] StringToByteArray(string str)
 	{
-	    System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-	    return enc.GetBytes(str);
-	}
-	
-	private static string ByteArrayToString(byte[] arr)
-	{
-	    System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-	    return enc.GetString(arr);
+		System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+		return enc.GetBytes(str);
 	}
 }
