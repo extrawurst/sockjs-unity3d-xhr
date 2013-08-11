@@ -12,12 +12,6 @@ public class SockjsClient : MonoBehaviour {
 		connected
 	}
 	
-	private class PollResult
-	{
-		public string response;
-		public bool error;
-	}
-	
 	public delegate void OnMessageCallback(string _msg);
 	public delegate void OnConnectCallback();
 	public delegate void OnDisconnectCallback(int _code,string _message);
@@ -30,7 +24,11 @@ public class SockjsClient : MonoBehaviour {
 	private Hashtable m_sendHeader = new Hashtable();
 	private ConnectionState m_state;
 	private string m_xhr;
-	
+	private WWW m_wwwSending;
+	private float m_sentTime;
+	private WWW m_wwwPolling;
+	private int m_ping;
+
 	public ConnectionState State
 	{
 		get { return m_state; }
@@ -40,11 +38,91 @@ public class SockjsClient : MonoBehaviour {
 	{
 		get { return m_state == ConnectionState.connected; }
 	}
-	
+
+	public int Ping
+	{
+		get { return m_ping; }
+	}
+
 	// Use this for initialization
 	public void Start () {
 		
 		m_sendHeader["Content-Type"] = "application/xml";
+	}
+
+	public void Update()
+	{
+		if (m_wwwSending != null && m_wwwSending.isDone)
+		{
+			if (m_wwwSending.error != null)
+			{
+				OnDisconnect(-1, "error sending data");
+			}
+
+			m_ping = (int)((Time.time - m_sentTime)*1000);
+
+			m_wwwSending = null;
+
+			//TODO: sent whatever there is batched up to send out
+		}
+
+		// long poll finished ?
+		if (m_wwwPolling != null && m_wwwPolling.isDone)
+		{
+			if(m_wwwPolling.error != null)
+			{
+				if (Connected)
+				{
+					OnEventDisconnect(-1, "net error");
+				}
+			}
+			else
+			{
+				var response = m_wwwPolling.text;
+
+				if (!Connected)
+				{
+					if (response.Length > 0 && response[0] == 'o')
+					{
+						OnEventConnected();
+					}
+				}
+				else
+				{
+					if (response.Length > 0)
+					{
+						if (response[0] == 'c')
+						{
+							var payload = response.Substring(2, response.Length - 4);
+
+							var separatorIdx = payload.IndexOf(',');
+
+							string partCode;
+							string partMessage;
+
+							partCode = payload.Substring(0, separatorIdx);
+							partMessage = payload.Substring(separatorIdx + 1, payload.Length - separatorIdx - 1);
+
+							OnEventDisconnect(int.Parse(partCode), partMessage.Trim('"'));
+						}
+						else if (response[0] == 'h')
+						{
+							Debug.Log("heartbeat");
+						}
+						else if (response[0] == 'a')
+						{
+							var payload = response.Substring(3, response.Length - 6);
+
+							if (OnMessage != null)
+								OnMessage(payload);
+						}
+					}
+				}
+			}
+
+			if (Connected)
+				StartPoll();
+		}
 	}
 	
 	public void Connect(string _host)
@@ -60,9 +138,14 @@ public class SockjsClient : MonoBehaviour {
 		if(m_state == ConnectionState.disconnected)
 		{
 			m_state = ConnectionState.connecting;
-			
-			StartCoroutine(Polling());
+
+			StartPoll();
 		}
+	}
+
+	private void StartPoll()
+	{
+		m_wwwPolling = new WWW(m_xhr, new byte[] {0});
 	}
 
 	public void Disconnect()
@@ -71,15 +154,24 @@ public class SockjsClient : MonoBehaviour {
 		{
 			m_state = ConnectionState.disconnected;
 
-			StartCoroutine(Polling());
+			m_wwwSending = null;
+			m_wwwPolling = null;
 		}
 	}
 
 	public void SendData(string _payload)
 	{
-		var www = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[\"{0}\"]", _payload)), m_sendHeader);
+		if (m_wwwSending == null)
+		{
+			m_wwwSending = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[\"{0}\"]", _payload)), m_sendHeader);
 
-		StartCoroutine(WaitforRequest(www, null));
+			m_sentTime = Time.time;
+		}
+		else
+		{
+			//TODO: batching
+			Debug.LogError("TODO");
+		}
 	}
 
 	private static byte[] GetHash(string _inputString)
@@ -97,72 +189,6 @@ public class SockjsClient : MonoBehaviour {
 		return sb.ToString();
 	}
 	
-	private IEnumerator Polling()
-	{
-		var pollResult = new PollResult();
-		
-		while(true)
-		{
-			var www = new WWW(m_xhr,new byte[]{0});
-			
-			StartCoroutine(WaitforRequest(www,pollResult));
-			
-			yield return www;
-			
-			if(pollResult.error)
-			{
-				if(Connected)
-				{
-					OnEventDisconnect(-1,"net error");
-				}
-			}
-			else
-			{
-				if(!Connected)
-				{
-					if(pollResult.response.Length > 0 && pollResult.response[0] == 'o')
-					{
-						OnEventConnected();
-					}
-				}
-				else
-				{
-					if(pollResult.response.Length > 0)
-					{
-						if( pollResult.response[0] == 'c')
-						{
-							var payload = pollResult.response.Substring(2,pollResult.response.Length-4);
-							
-							var separatorIdx = payload.IndexOf(',');
-							
-							string partCode;
-							string partMessage;
-							
-							partCode = payload.Substring(0,separatorIdx);
-							partMessage = payload.Substring(separatorIdx+1,payload.Length-separatorIdx-1);
-							
-							OnEventDisconnect(int.Parse(partCode),partMessage.Trim('"'));
-						}
-						else if( pollResult.response[0] == 'h')
-						{
-							Debug.Log("heartbeat");
-						}
-						else if( pollResult.response[0] == 'a')
-						{
-							var payload = pollResult.response.Substring(3,pollResult.response.Length-6);
-							
-							if(OnMessage != null)
-								OnMessage(payload);
-						}
-					}
-				}
-			}
-			
-			if(!Connected)
-				break;
-		}
-	}
-	
 	private void OnEventConnected()
 	{
 		m_state = ConnectionState.connected;
@@ -177,17 +203,6 @@ public class SockjsClient : MonoBehaviour {
 		
 		if(OnDisconnect != null)
 			OnDisconnect(_code,_msg);
-	}
-	
-	private IEnumerator WaitforRequest(WWW _www, PollResult _result)
-	{
-		yield return _www;
-		
-		if(_result != null)
-		{
-			_result.error = (_www.error != null);
-			_result.response = _www.text;
-		}
 	}
 	
 	private static byte[] StringToByteArray(string str)

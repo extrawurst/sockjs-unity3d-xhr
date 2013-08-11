@@ -35,6 +35,8 @@ public class chatclient : MonoBehaviour {
 		}
 		else if(sockjs.State == SockjsClient.ConnectionState.connected)
 		{
+			GUI.Label(new Rect(Screen.width - 80,0,80,25), "ping: "+sockjs.Ping);
+
 			if(GUI.Button(new Rect(0,0,200,30),"disconnect"))
 			{
 				sockjs.Disconnect();
