@@ -127,25 +127,20 @@ public class SockjsClient : MonoBehaviour {
 	
 	public void Connect(string _host)
 	{
-		var serverId = Random.Range(0,999);
-		
-		var sessionIdRnd = Random.Range(0,100000000);
-		
-		var sessionId = System.DateTime.UtcNow.ToLongTimeString() + '-' + sessionIdRnd;
-		
-		m_xhr = _host + string.Format("{0:000}/{1}/xhr", serverId, GetHashString(sessionId));
-		
 		if(m_state == ConnectionState.disconnected)
 		{
+			var serverId = Random.Range(0, 999);
+
+			var sessionIdRnd = Random.Range(0, 100000000);
+
+			var sessionId = System.DateTime.UtcNow.ToLongTimeString() + '-' + sessionIdRnd;
+
+			m_xhr = _host + string.Format("{0:000}/{1}/xhr", serverId, GetHashString(sessionId));
+
 			m_state = ConnectionState.connecting;
 
 			StartPoll();
 		}
-	}
-
-	private void StartPoll()
-	{
-		m_wwwPolling = new WWW(m_xhr, new byte[] {0});
 	}
 
 	public void Disconnect()
@@ -161,17 +156,25 @@ public class SockjsClient : MonoBehaviour {
 
 	public void SendData(string _payload)
 	{
-		if (m_wwwSending == null)
+		if (m_state == ConnectionState.connected)
 		{
-			m_wwwSending = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[\"{0}\"]", _payload)), m_sendHeader);
+			if (m_wwwSending == null)
+			{
+				m_wwwSending = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[\"{0}\"]", _payload)), m_sendHeader);
 
-			m_sentTime = Time.time;
+				m_sentTime = Time.time;
+			}
+			else
+			{
+				//TODO: batching
+				Debug.LogError("TODO");
+			}
 		}
-		else
-		{
-			//TODO: batching
-			Debug.LogError("TODO");
-		}
+	}
+
+	private void StartPoll()
+	{
+		m_wwwPolling = new WWW(m_xhr, new byte[] { 0 });
 	}
 
 	private static byte[] GetHash(string _inputString)
