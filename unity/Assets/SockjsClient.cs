@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
 using System.Collections;
@@ -7,9 +8,9 @@ public class SockjsClient : MonoBehaviour {
 	
 	public enum ConnectionState
 	{
-		disconnected,
-		connecting,
-		connected
+		Disconnected,
+		Connecting,
+		Connected
 	}
 	
 	public delegate void OnMessageCallback(string _msg);
@@ -20,7 +21,6 @@ public class SockjsClient : MonoBehaviour {
 	public event OnDisconnectCallback OnDisconnect;
 	public event OnConnectCallback OnConnect;
 	
-	private float m_lastSend;
 	private Hashtable m_sendHeader = new Hashtable();
 	private ConnectionState m_state;
 	private string m_xhr;
@@ -28,6 +28,7 @@ public class SockjsClient : MonoBehaviour {
 	private float m_sentTime;
 	private WWW m_wwwPolling;
 	private int m_ping;
+	private List<string> m_outQueue = new List<string>();
 
 	public ConnectionState State
 	{
@@ -36,7 +37,7 @@ public class SockjsClient : MonoBehaviour {
 	
 	public bool Connected
 	{
-		get { return m_state == ConnectionState.connected; }
+		get { return m_state == ConnectionState.Connected; }
 	}
 
 	public int Ping
@@ -62,8 +63,16 @@ public class SockjsClient : MonoBehaviour {
 			m_ping = (int)((Time.time - m_sentTime)*1000);
 
 			m_wwwSending = null;
+		}
 
-			//TODO: sent whatever there is batched up to send out
+		if (m_wwwSending == null && m_outQueue.Count > 0)
+		{
+			var messages = string.Join(",", m_outQueue.ToArray());
+
+			m_wwwSending = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[{0}]", messages)), m_sendHeader);
+
+			m_sentTime = Time.time;
+			m_outQueue.Clear();
 		}
 
 		// long poll finished ?
@@ -127,7 +136,7 @@ public class SockjsClient : MonoBehaviour {
 	
 	public void Connect(string _host)
 	{
-		if(m_state == ConnectionState.disconnected)
+		if(m_state == ConnectionState.Disconnected)
 		{
 			var serverId = Random.Range(0, 999);
 
@@ -137,7 +146,7 @@ public class SockjsClient : MonoBehaviour {
 
 			m_xhr = _host + string.Format("{0:000}/{1}/xhr", serverId, GetHashString(sessionId));
 
-			m_state = ConnectionState.connecting;
+			m_state = ConnectionState.Connecting;
 
 			StartPoll();
 		}
@@ -145,30 +154,22 @@ public class SockjsClient : MonoBehaviour {
 
 	public void Disconnect()
 	{
-		if (m_state != ConnectionState.disconnected)
+		if (m_state != ConnectionState.Disconnected)
 		{
-			m_state = ConnectionState.disconnected;
+			m_state = ConnectionState.Disconnected;
 
 			m_wwwSending = null;
 			m_wwwPolling = null;
+			m_outQueue.Clear();
 		}
 	}
 
 	public void SendData(string _payload)
 	{
-		if (m_state == ConnectionState.connected)
+		if (m_state == ConnectionState.Connected)
 		{
-			if (m_wwwSending == null)
-			{
-				m_wwwSending = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[\"{0}\"]", _payload)), m_sendHeader);
-
-				m_sentTime = Time.time;
-			}
-			else
-			{
-				//TODO: batching
-				Debug.LogError("TODO");
-			}
+			//TODO: correct json string escaping
+			m_outQueue.Add('"'+_payload+'"');
 		}
 	}
 
@@ -194,7 +195,7 @@ public class SockjsClient : MonoBehaviour {
 	
 	private void OnEventConnected()
 	{
-		m_state = ConnectionState.connected;
+		m_state = ConnectionState.Connected;
 		
 		if(OnConnect != null)
 			OnConnect();
@@ -202,7 +203,7 @@ public class SockjsClient : MonoBehaviour {
 	
 	private void OnEventDisconnect(int _code, string _msg)
 	{
-		m_state = ConnectionState.disconnected;
+		m_state = ConnectionState.Disconnected;
 		
 		if(OnDisconnect != null)
 			OnDisconnect(_code,_msg);

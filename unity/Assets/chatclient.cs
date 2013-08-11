@@ -26,14 +26,14 @@ public class chatclient : MonoBehaviour {
 	
 	void OnGUI () {
 		
-		if(sockjs.State == SockjsClient.ConnectionState.disconnected)
+		if(sockjs.State == SockjsClient.ConnectionState.Disconnected)
 		{
 			if(GUI.Button(new Rect(0,0,200,30),"connect"))
 			{
 				sockjs.Connect(host);
 			}
 		}
-		else if(sockjs.State == SockjsClient.ConnectionState.connected)
+		else if(sockjs.State == SockjsClient.ConnectionState.Connected)
 		{
 			GUI.Label(new Rect(Screen.width - 80,0,80,25), "ping: "+sockjs.Ping);
 
