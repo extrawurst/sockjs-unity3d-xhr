@@ -9,4 +9,11 @@
 /server/node_modules/
 /unity/unity.userprefs
 
+# Intellij
+.idea/
+*.iml
+*.iws
+
 /unity/*.pidb
+
+/server/server_vertx/out
