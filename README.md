@@ -21,10 +21,14 @@ public class Client : MonoBehaviour {
 	{
 		sockjs.OnMessage += OnMessage;
 		sockjs.OnConnect += OnConnect;
+		
+		// connect to wherever your server is running
+		sockjs.Connect("http://localhost:9999/echo/");
 	}
 
 	private void OnMessage(string _msg)
 	{
+		// got message
 		Debug.Log(_msg);
 	}
 
