@@ -39,11 +39,11 @@ public class SockJSExample extends Verticle {
 
                 m_clients.put(sock.writeHandlerID(),sock);
 
-                sock.endHandler(new Handler<Void>() {
-                    public void handle(Void _param) {
-                        m_clients.remove(sock.writeHandlerID());
-                    }
-                });
+				sock.endHandler(new Handler<Void>() {
+					public void handle(Void _param) {
+						m_clients.remove(sock.writeHandlerID());
+					}
+				});
 
 				sock.dataHandler(new Handler<Buffer>() {
 					public void handle(Buffer data) {
