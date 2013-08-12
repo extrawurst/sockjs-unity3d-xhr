@@ -31,22 +31,31 @@ public class SockJSExample extends Verticle {
 
 	public void start() {
 		HttpServer server = vertx.createHttpServer();
-	
+
 		SockJSServer sockServer = vertx.createSockJSServer(server);
 
-		sockServer.installApp(new JsonObject().putString("prefix", "/echo"), new Handler<SockJSSocket>() {
+		JsonObject config = new JsonObject()
+				.putString("prefix", "/echo")
+				.putNumber("heartbeat_period",5000)
+				.putNumber("session_timeout",25000);
+
+		sockServer.installApp(config, new Handler<SockJSSocket>() {
 			public void handle(final SockJSSocket sock) {
+
+				System.out.println("connect: "+sock.writeHandlerID());
 
                 m_clients.put(sock.writeHandlerID(),sock);
 
 				sock.endHandler(new Handler<Void>() {
 					public void handle(Void _param) {
+						System.out.println("disconnect: "+sock.writeHandlerID());
 						m_clients.remove(sock.writeHandlerID());
 					}
 				});
 
 				sock.dataHandler(new Handler<Buffer>() {
 					public void handle(Buffer data) {
+						System.out.println("msg: "+data);
                         for(SockJSSocket client: m_clients.values())
                             client.write(data);
 					}
