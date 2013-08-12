@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
 using System.Collections;
+using Random = UnityEngine.Random;
 
 public class SockjsClient : MonoBehaviour {
 	
@@ -116,7 +118,7 @@ public class SockjsClient : MonoBehaviour {
 						}
 						else if (response[0] == 'h')
 						{
-							Debug.Log("heartbeat");
+							//Debug.Log("heartbeat");
 						}
 						else if (response[0] == 'a')
 						{
@@ -142,7 +144,10 @@ public class SockjsClient : MonoBehaviour {
 
 			var sessionIdRnd = Random.Range(0, 100000000);
 
-			var sessionId = System.DateTime.UtcNow.ToLongTimeString() + '-' + sessionIdRnd;
+			var sessionId = string.Format("{0}.{1}.{2}",
+				System.DateTime.UtcNow.ToLongTimeString(), 
+				sessionIdRnd,
+				SystemInfo.deviceUniqueIdentifier);
 
 			m_xhr = _host + string.Format("{0:000}/{1}/xhr", serverId, GetHashString(sessionId));
 
