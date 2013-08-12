@@ -59,7 +59,7 @@ public class SockjsClient : MonoBehaviour {
 		{
 			if (m_wwwSending.error != null)
 			{
-				OnDisconnect(-1, "error sending data");
+				OnEventDisconnect(-1, "error sending data");
 			}
 
 			m_ping = (int)((Time.time - m_sentTime)*1000);
@@ -67,15 +67,7 @@ public class SockjsClient : MonoBehaviour {
 			m_wwwSending = null;
 		}
 
-		if (m_wwwSending == null && m_outQueue.Count > 0)
-		{
-			var messages = string.Join(",", m_outQueue.ToArray());
-
-			m_wwwSending = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[{0}]", messages)), m_sendHeader);
-
-			m_sentTime = Time.time;
-			m_outQueue.Clear();
-		}
+		FlushOutqueue();
 
 		// long poll finished ?
 		if (m_wwwPolling != null && m_wwwPolling.isDone)
@@ -135,7 +127,20 @@ public class SockjsClient : MonoBehaviour {
 				StartPoll();
 		}
 	}
-	
+
+	private void FlushOutqueue()
+	{
+		if (m_wwwSending == null && m_outQueue.Count > 0)
+		{
+			var messages = string.Join(",", m_outQueue.ToArray());
+
+			m_wwwSending = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[{0}]", messages)), m_sendHeader);
+
+			m_sentTime = Time.time;
+			m_outQueue.Clear();
+		}
+	}
+
 	public void Connect(string _host)
 	{
 		if(m_state == ConnectionState.Disconnected)
@@ -169,13 +174,16 @@ public class SockjsClient : MonoBehaviour {
 		}
 	}
 
-	public void SendData(string _payload)
+	public void SendData(string _payload, bool _tryFlush=false)
 	{
 		if (m_state == ConnectionState.Connected)
 		{
 			//TODO: correct json string escaping
 			m_outQueue.Add('"'+_payload+'"');
 		}
+
+		if (_tryFlush)
+			FlushOutqueue();
 	}
 
 	private void StartPoll()
