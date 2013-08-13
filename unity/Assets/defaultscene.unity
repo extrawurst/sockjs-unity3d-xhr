@@ -177,6 +177,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0070dad6e9eb21a48842984994b011ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  host: http://192.168.1.70:9999/echo/
+  host: http://localhost:9999/echo/
   sockjs: {fileID: 1925077878}
   skin: {fileID: 11400000, guid: b595dc47f7eb79449a74db95c0edb392, type: 2}

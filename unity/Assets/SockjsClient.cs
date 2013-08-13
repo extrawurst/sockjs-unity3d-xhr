@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using System.Collections;
 using Random = UnityEngine.Random;
@@ -22,16 +22,17 @@ public class SockjsClient : MonoBehaviour {
 	public event OnMessageCallback OnMessage;
 	public event OnDisconnectCallback OnDisconnect;
 	public event OnConnectCallback OnConnect;
-	
-	private Hashtable m_sendHeader = new Hashtable();
+
 	private ConnectionState m_state;
 	private string m_xhr;
 	private WWW m_wwwSending;
 	private float m_sentTime;
 	private WWW m_wwwPolling;
 	private int m_ping;
-	private List<string> m_outQueue = new List<string>();
 	private string m_host;
+	private readonly Regex m_splitter = new Regex("\",\"");
+	private readonly Hashtable m_sendHeader = new Hashtable();
+	private readonly List<string> m_outQueue = new List<string>();
 
 	public ConnectionState State
 	{
@@ -106,11 +107,8 @@ public class SockjsClient : MonoBehaviour {
 
 							var separatorIdx = payload.IndexOf(',');
 
-							string partCode;
-							string partMessage;
-
-							partCode = payload.Substring(0, separatorIdx);
-							partMessage = payload.Substring(separatorIdx + 1, payload.Length - separatorIdx - 1);
+							string partCode = payload.Substring(0, separatorIdx);
+							string partMessage = payload.Substring(separatorIdx + 1, payload.Length - separatorIdx - 1);
 
 							OnEventDisconnect(int.Parse(partCode), partMessage.Trim('"'));
 						}
@@ -122,8 +120,17 @@ public class SockjsClient : MonoBehaviour {
 						{
 							var payload = response.Substring(3, response.Length - 6);
 
+							var messages = m_splitter.Split(payload);
+
 							if (OnMessage != null)
-								OnMessage(payload);
+							{
+								foreach(var msg in messages)
+									OnMessage(DecodeMsg(msg));
+							}
+						}
+						else
+						{
+							Debug.LogError("[sockjs] unkown message: " + response);
 						}
 					}
 				}
@@ -131,19 +138,6 @@ public class SockjsClient : MonoBehaviour {
 
 			if (Connected)
 				StartPoll();
-		}
-	}
-
-	private void FlushOutqueue()
-	{
-		if (m_wwwSending == null && m_outQueue.Count > 0)
-		{
-			var messages = string.Join(",", m_outQueue.ToArray());
-
-			m_wwwSending = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[{0}]", messages)), m_sendHeader);
-
-			m_sentTime = Time.time;
-			m_outQueue.Clear();
 		}
 	}
 
@@ -186,12 +180,38 @@ public class SockjsClient : MonoBehaviour {
 	{
 		if (m_state == ConnectionState.Connected)
 		{
-			//TODO: correct json string escaping
-			m_outQueue.Add('"'+_payload+'"');
+			var escapedMsg = '"' + EncodeMsg(_payload) + '"';
+
+			Debug.Log(escapedMsg);
+
+			m_outQueue.Add(escapedMsg);
 		}
 
 		if (_tryFlush)
 			FlushOutqueue();
+	}
+
+	private static string DecodeMsg(string _msg)
+	{
+		return _msg.Replace("\\\\", "\\").Replace("\\\"", "\"");
+	}
+
+	private static string EncodeMsg(string _payload)
+	{
+		return _payload.Replace("\\", "\\\\").Replace("\"", "\\\"");
+	}
+
+	private void FlushOutqueue()
+	{
+		if (m_wwwSending == null && m_outQueue.Count > 0)
+		{
+			var messages = string.Join(",", m_outQueue.ToArray());
+
+			m_wwwSending = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[{0}]", messages)), m_sendHeader);
+
+			m_sentTime = Time.time;
+			m_outQueue.Clear();
+		}
 	}
 
 	private void StartPoll()
@@ -230,9 +250,9 @@ public class SockjsClient : MonoBehaviour {
 			OnDisconnect(_code,_msg);
 	}
 	
-	private static byte[] StringToByteArray(string str)
+	private static byte[] StringToByteArray(string _str)
 	{
-		System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-		return enc.GetBytes(str);
+		var enc = new ASCIIEncoding();
+		return enc.GetBytes(_str);
 	}
 }
