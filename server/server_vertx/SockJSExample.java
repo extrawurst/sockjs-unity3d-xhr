@@ -18,6 +18,7 @@
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpServer;
+import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.sockjs.SockJSServer;
 import org.vertx.java.core.sockjs.SockJSSocket;
@@ -31,6 +32,19 @@ public class SockJSExample extends Verticle {
 
 	public void start() {
 		HttpServer server = vertx.createHttpServer();
+
+        //note: to be abel to use this for web player builds too we have to server the xdomain.xml
+        server.requestHandler(new Handler<HttpServerRequest>() {
+            public void handle(HttpServerRequest req) {
+                //TODO:
+                //if (req.path().equals("/crossdomain.xml"))
+                //    req.response().sendFile("crossdomain.xml");
+                //else if (req.path().equals("/chatclient/web.html"))
+                //    req.response().sendFile("chatclient/web.html");
+                //else if (req.path().equals("/chatclient/web.unity3d"))
+                //    req.response().sendFile("chatclient/web.unity3d");
+            }
+        });
 
 		SockJSServer sockServer = vertx.createSockJSServer(server);
 
