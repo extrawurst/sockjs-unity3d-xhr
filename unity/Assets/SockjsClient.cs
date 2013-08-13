@@ -31,6 +31,7 @@ public class SockjsClient : MonoBehaviour {
 	private WWW m_wwwPolling;
 	private int m_ping;
 	private List<string> m_outQueue = new List<string>();
+	private string m_host;
 
 	public ConnectionState State
 	{
@@ -45,6 +46,11 @@ public class SockjsClient : MonoBehaviour {
 	public int Ping
 	{
 		get { return m_ping; }
+	}
+
+	public string Host
+	{
+		get { return m_host; }
 	}
 
 	// Use this for initialization
@@ -145,6 +151,8 @@ public class SockjsClient : MonoBehaviour {
 	{
 		if(m_state == ConnectionState.Disconnected)
 		{
+			m_host = _host;
+
 			var serverId = Random.Range(0, 999);
 
 			var sessionIdRnd = Random.Range(0, 100000000);

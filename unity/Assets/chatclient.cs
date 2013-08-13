@@ -59,6 +59,10 @@ public class chatclient : MonoBehaviour {
 
 			m_username = GUI.TextField(new Rect(100, 0, 200, 60), m_username);
 		}
+		else if (sockjs.State == SockjsClient.ConnectionState.Connecting)
+		{
+			GUI.Label(new Rect(10, 10, 400, 100), "connecting to: "+sockjs.Host);
+		}
 		else if(sockjs.State == SockjsClient.ConnectionState.Connected)
 		{
 			GUI.Label(new Rect(Screen.width - 80,0,80,25), "ping: "+sockjs.Ping);
