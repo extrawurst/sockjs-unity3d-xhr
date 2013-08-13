@@ -182,8 +182,6 @@ public class SockjsClient : MonoBehaviour {
 		{
 			var escapedMsg = '"' + EncodeMsg(_payload) + '"';
 
-			Debug.Log(escapedMsg);
-
 			m_outQueue.Add(escapedMsg);
 		}
 
