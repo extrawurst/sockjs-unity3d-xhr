@@ -6,7 +6,7 @@ using UnityEngine;
 using System.Collections;
 using Random = UnityEngine.Random;
 
-public class SockjsClient : MonoBehaviour {
+public class SockjsClient {
 	
 	public enum ConnectionState
 	{
@@ -25,14 +25,20 @@ public class SockjsClient : MonoBehaviour {
 
 	private ConnectionState m_state;
 	private string m_xhr;
-	private WWW m_wwwSending;
+	private WWW m_wwwSendingObject;
+	private WWW m_wwwCurrentSending;
 	private float m_sentTime;
 	private WWW m_wwwPolling;
 	private int m_ping;
 	private string m_host;
-	private readonly Regex m_splitter = new Regex("\",\"");
-	private readonly Hashtable m_sendHeader = new Hashtable();
 	private readonly List<string> m_outQueue = new List<string>();
+	private static readonly Regex RegexSplitter = new Regex("\",\"");
+	private static readonly byte[] PollPostData = {0};
+	private static readonly string[] PollHeaders = {};
+	private static readonly ASCIIEncoding AsciiEncoding = new ASCIIEncoding();
+	private static readonly StringBuilder HashStringBuilder = new StringBuilder();
+	private static readonly Hashtable SendHeader = new Hashtable();
+	private static readonly string[] SendHeaderStrings = {"Content-Type=application/xml"};
 
 	public ConnectionState State
 	{
@@ -49,30 +55,38 @@ public class SockjsClient : MonoBehaviour {
 		get { return m_ping; }
 	}
 
+	public int AutoPingRefreshMs
+	{
+		get; set;
+	}
+
 	public string Host
 	{
 		get { return m_host; }
 	}
 
-	// Use this for initialization
-	public void Start () {
-		
-		m_sendHeader["Content-Type"] = "application/xml";
+	public SockjsClient()
+	{
+		if (SendHeader.Count == 0)
+			SendHeader["Content-Type"] = "application/xml";
 	}
 
 	public void Update()
 	{
-		if (m_wwwSending != null && m_wwwSending.isDone)
+		if (m_wwwCurrentSending != null && m_wwwCurrentSending.isDone)
 		{
-			if (m_wwwSending.error != null)
+			if (m_wwwCurrentSending.error != null)
 			{
 				OnEventDisconnect(-1, "error sending data");
+				Debug.LogError("[sockjs] send error -> disconnect");
 			}
 
 			m_ping = (int)((Time.time - m_sentTime)*1000);
 
-			m_wwwSending = null;
+			m_wwwCurrentSending = null;
 		}
+
+		AutoPingRefresh();
 
 		FlushOutqueue();
 
@@ -84,6 +98,11 @@ public class SockjsClient : MonoBehaviour {
 				if (Connected)
 				{
 					OnEventDisconnect(-1, "net error");
+					Debug.LogError("[sockjs] poll error -> disconnect");
+				}
+				else
+				{
+					OnEventDisconnect(-1, "connect error");
 				}
 			}
 			else
@@ -96,6 +115,8 @@ public class SockjsClient : MonoBehaviour {
 					{
 						OnEventConnected();
 					}
+					else
+						Debug.LogError("[sockjs] unkown message: " + response);	
 				}
 				else
 				{
@@ -120,7 +141,7 @@ public class SockjsClient : MonoBehaviour {
 						{
 							var payload = response.Substring(3, response.Length - 6);
 
-							var messages = m_splitter.Split(payload);
+							var messages = RegexSplitter.Split(payload);
 
 							if (OnMessage != null)
 							{
@@ -138,6 +159,20 @@ public class SockjsClient : MonoBehaviour {
 
 			if (Connected)
 				StartPoll();
+			else
+				m_wwwPolling = null;
+		}
+	}
+
+	private void AutoPingRefresh()
+	{
+		if (AutoPingRefreshMs > 0)
+		{
+			var lastSent = (int)((Time.time - m_sentTime) * 1000.0f);
+			if (lastSent > AutoPingRefreshMs)
+			{
+				SendData("");
+			}
 		}
 	}
 
@@ -168,10 +203,17 @@ public class SockjsClient : MonoBehaviour {
 	{
 		if (m_state != ConnectionState.Disconnected)
 		{
-			m_state = ConnectionState.Disconnected;
+			OnEventDisconnect(0, "user disconnect");
 
-			m_wwwSending = null;
+			if (m_wwwCurrentSending != null)
+				m_wwwCurrentSending.Dispose();
+
+			if (m_wwwPolling != null)
+				m_wwwPolling.Dispose();
+
+			m_wwwCurrentSending = null;
 			m_wwwPolling = null;
+
 			m_outQueue.Clear();
 		}
 	}
@@ -201,11 +243,15 @@ public class SockjsClient : MonoBehaviour {
 
 	private void FlushOutqueue()
 	{
-		if (m_wwwSending == null && m_outQueue.Count > 0)
+		if (m_wwwCurrentSending == null && m_outQueue.Count > 0)
 		{
 			var messages = string.Join(",", m_outQueue.ToArray());
 
-			m_wwwSending = new WWW(m_xhr + "_send", StringToByteArray(string.Format("[{0}]", messages)), m_sendHeader);
+			var postData = StringToByteArray(string.Format("[{0}]", messages));
+
+			m_wwwSendingObject = new WWW(m_xhr + "_send", postData, SendHeader);
+				
+			m_wwwCurrentSending = m_wwwSendingObject;
 
 			m_sentTime = Time.time;
 			m_outQueue.Clear();
@@ -214,7 +260,10 @@ public class SockjsClient : MonoBehaviour {
 
 	private void StartPoll()
 	{
-		m_wwwPolling = new WWW(m_xhr, new byte[] { 0 });
+		if (m_wwwPolling == null)
+			m_wwwPolling = new WWW(m_xhr, PollPostData);
+		else
+			m_wwwPolling.InitWWW(m_xhr, PollPostData, PollHeaders);
 	}
 
 	private static byte[] GetHash(string _inputString)
@@ -225,11 +274,11 @@ public class SockjsClient : MonoBehaviour {
 
 	private static string GetHashString(string _inputString)
 	{
-		var sb = new StringBuilder();
+		HashStringBuilder.Length = 0;
 		foreach (byte b in GetHash(_inputString))
-			sb.Append(b.ToString("X2"));
+			HashStringBuilder.Append(b.ToString("X2"));
 
-		return sb.ToString();
+		return HashStringBuilder.ToString();
 	}
 	
 	private void OnEventConnected()
@@ -250,7 +299,7 @@ public class SockjsClient : MonoBehaviour {
 	
 	private static byte[] StringToByteArray(string _str)
 	{
-		var enc = new ASCIIEncoding();
+		var enc = AsciiEncoding;
 		return enc.GetBytes(_str);
 	}
 }
