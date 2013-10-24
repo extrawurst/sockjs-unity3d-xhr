@@ -139,7 +139,8 @@ public class SockjsClient {
 						}
 						else if (response[0] == 'a')
 						{
-							var payload = response.Substring(3, response.Length - 6);
+							response = response.TrimEnd();
+							var payload = response.Substring(3, response.Length - 5);
 
 							var messages = RegexSplitter.Split(payload);
 

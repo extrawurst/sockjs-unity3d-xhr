@@ -15,6 +15,7 @@ public class chatclient : MonoBehaviour {
 	// Use this for initialization
 	public void Start()
 	{
+		m_sockjs.AutoPingRefreshMs = 2000;
 		m_sockjs.OnMessage += OnMessage;
 		m_sockjs.OnConnect += OnConnect;
 	}
