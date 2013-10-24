@@ -86,7 +86,6 @@ GameObject:
   - 92: {fileID: 1925077875}
   - 124: {fileID: 1925077874}
   - 81: {fileID: 1925077873}
-  - 114: {fileID: 1925077878}
   - 114: {fileID: 1925077879}
   m_Layer: 0
   m_Name: Main Camera
@@ -155,17 +154,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
---- !u!114 &1925077878
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1925077872}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e5af8282c0d9cbd4480094f0a3a38a0f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1925077879
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -177,6 +165,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0070dad6e9eb21a48842984994b011ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  host: http://localhost:9999/echo/
-  sockjs: {fileID: 1925077878}
+  host: http://localhost:8989/echo/
   skin: {fileID: 11400000, guid: b595dc47f7eb79449a74db95c0edb392, type: 2}
