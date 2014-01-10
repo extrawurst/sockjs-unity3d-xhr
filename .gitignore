@@ -17,3 +17,7 @@
 /unity/*.pidb
 
 /server/server_vertx/out
+server/server_nodejs/node_modules/
+unity/_deploy/
+unity/unity-csharp.sln.DotSettings
+unity/unity-csharp.v11.suo
