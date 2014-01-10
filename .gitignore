@@ -21,3 +21,16 @@ server/server_nodejs/node_modules/
 unity/_deploy/
 unity/unity-csharp.sln.DotSettings
 unity/unity-csharp.v11.suo
+server/server_vibe.d/.dub/
+server/server_vibe.d/libeay32.dll
+server/server_vibe.d/libevent.dll
+server/server_vibe.d/libevent.visualdproj
+server/server_vibe.d/openssl.visualdproj
+server/server_vibe.d/sockjs-d.visualdproj
+server/server_vibe.d/sockjs-echo-chat.v11.suo
+server/server_vibe.d/sockjs-echo-chat.visualdproj
+server/server_vibe.d/sockjs-echo-chat_d.exe
+server/server_vibe.d/sockjs-echo-chat_d.exe_cv
+server/server_vibe.d/sockjs-echo-chat_d.pdb
+server/server_vibe.d/ssleay32.dll
+server/server_vibe.d/vibe-d.visualdproj
