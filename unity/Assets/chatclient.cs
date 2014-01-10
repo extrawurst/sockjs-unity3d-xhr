@@ -15,7 +15,9 @@ public class chatclient : MonoBehaviour {
 	// Use this for initialization
 	public void Start()
 	{
+		// will sent empty msg to meisure latency regularly (disabled by default)
 		m_sockjs.AutoPingRefreshMs = 2000;
+
 		m_sockjs.OnMessage += OnMessage;
 		m_sockjs.OnConnect += OnConnect;
 	}
@@ -27,6 +29,9 @@ public class chatclient : MonoBehaviour {
 
 	private void OnMessage(string _msg)
 	{
+		if (string.IsNullOrEmpty(_msg))
+			return;
+
 		m_chat += _msg+'\n';
 
 		// scroll down
