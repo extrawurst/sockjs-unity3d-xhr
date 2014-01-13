@@ -1,1 +1,0 @@
-vertx run SockJSExample.java

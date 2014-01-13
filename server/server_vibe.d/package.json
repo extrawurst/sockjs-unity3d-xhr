@@ -1,9 +1,0 @@
-{
-	"name": "sockjs-echo-chat",
-	"description": "",
-	"copyright": "Copyright © 2014, Stephan Dilly",
-	"authors": ["Stephan Dilly"],
-	"dependencies": {
-		"sockjs-d": "~master"
-	}
-}
