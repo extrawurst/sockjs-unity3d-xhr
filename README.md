@@ -7,15 +7,12 @@ sockjs client implementation for unity3D using xhr polling (so this works with u
 Usage
 ==================
 
-For a more complex example see the chat server/client in nodejs and unity in the source code.
-See the https://github.com/sockjs/sockjs-node sockjs documentation for details on the server implementation.
-
 Simple usage example:
 
 ```
 public class Client : MonoBehaviour {
 
-	public SockjsClient sockjs;
+	public SockjsClient sockjs = new SockjsClient();
 	
 	public void Start()
 	{
@@ -40,3 +37,5 @@ public class Client : MonoBehaviour {
 	}
 }
 ```
+
+For an extensive example see the example unity project at https://github.com/Extrawurst/sockjs-unity3d-xhr-example
