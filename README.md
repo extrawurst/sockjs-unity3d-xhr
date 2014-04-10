@@ -1,5 +1,4 @@
 [![Analytics](https://ga-beacon.appspot.com/UA-49903757-1/sockjs-unity3d-xhr/readme)](https://github.com/Extrawurst/sockjs-unity3d-xhr)
-
 sockjs-unity3d-xhr
 ==================
 
