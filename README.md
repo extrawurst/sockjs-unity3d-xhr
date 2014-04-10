@@ -1,4 +1,3 @@
-[![Analytics](https://ga-beacon.appspot.com/UA-49903757-1/sockjs-unity3d-xhr/readme)](https://github.com/Extrawurst/sockjs-unity3d-xhr)
 sockjs-unity3d-xhr
 ==================
 
@@ -40,3 +39,5 @@ public class Client : MonoBehaviour {
 ```
 
 For an extensive example see the example unity project at https://github.com/Extrawurst/sockjs-unity3d-xhr-example
+
+[![Analytics](https://ga-beacon.appspot.com/UA-49903757-1/sockjs-unity3d-xhr/readme)](https://github.com/Extrawurst/sockjs-unity3d-xhr)
