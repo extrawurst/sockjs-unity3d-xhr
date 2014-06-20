@@ -43,7 +43,7 @@ public class SockjsClient {
 	private static readonly string[] PollHeaders = {};
 	private static readonly ASCIIEncoding AsciiEncoding = new ASCIIEncoding();
 	private static readonly StringBuilder HashStringBuilder = new StringBuilder();
-	private static readonly Hashtable SendHeader = new Hashtable();
+	private static readonly Dictionary<string, string> SendHeader = new Dictionary<string, string>();
 	private int m_pollTimeoutConnectingSecs = 5;
 	private int m_longPollTimeOutSec = 60;
 
