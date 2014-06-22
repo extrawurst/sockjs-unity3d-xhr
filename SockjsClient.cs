@@ -44,6 +44,8 @@ public class SockjsClient {
 	private static readonly ASCIIEncoding AsciiEncoding = new ASCIIEncoding();
 	private static readonly StringBuilder HashStringBuilder = new StringBuilder();
 	private static readonly Dictionary<string, string> SendHeader = new Dictionary<string, string>();
+	//Note: unity pre 4.5 needs the following line instead of the Dictionary
+	//private static readonly Hashtable SendHeader = new Hashtable();
 	private int m_pollTimeoutConnectingSecs = 5;
 	private int m_longPollTimeOutSec = 60;
 
