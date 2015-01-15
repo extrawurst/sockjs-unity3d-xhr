@@ -37,15 +37,13 @@ public class SockjsClient {
 	private int m_currentPollErrors;
 	private int m_currentSendErrors;
 	private int m_errorLimit = 3;
+	private string[] m_httpHeadersArray = { };
 	private readonly List<string> m_outQueue = new List<string>();
 	private static readonly Regex RegexSplitter = new Regex("\",\"");
 	private static readonly byte[] PollPostData = {0};
-	private static readonly string[] PollHeaders = {};
 	private static readonly ASCIIEncoding AsciiEncoding = new ASCIIEncoding();
 	private static readonly StringBuilder HashStringBuilder = new StringBuilder();
-	private static readonly Dictionary<string, string> SendHeader = new Dictionary<string, string>();
-	//Note: unity pre 4.5 needs the following line instead of the Dictionary
-	//private static readonly Hashtable SendHeader = new Hashtable();
+	private static readonly Dictionary<string,string> HttpHeader = new Dictionary<string, string>();
 	private int m_pollTimeoutConnectingSecs = 5;
 	private int m_longPollTimeOutSec = 60;
 
@@ -109,8 +107,22 @@ public class SockjsClient {
 
 	public SockjsClient()
 	{
-		if (SendHeader.Count == 0)
-			SendHeader["Content-Type"] = "application/xml";
+		HttpHeader["Content-Type"] = "application/xml";
+		UpdateHeaders();
+	}
+
+	private void UpdateHeaders()
+	{
+		Array.Resize(ref m_httpHeadersArray, HttpHeader.Count);
+		
+		int index = 0;
+
+		foreach (var kvp in HttpHeader)
+		{
+			m_httpHeadersArray[index] = string.Format("{0}: {1}", kvp.Key, kvp.Value);
+
+			index++;
+		}
 	}
 
 	public void Update()
@@ -142,6 +154,12 @@ public class SockjsClient {
 			}
 			else
 			{
+				if (m_wwwCurrentSending.responseHeaders.ContainsKey("Set-Cookie"))
+				{
+					HttpHeader["Cookie"] = m_wwwCurrentSending.responseHeaders["Set-Cookie"];
+					UpdateHeaders();
+				}
+
 				m_currentSendErrors = 0;
 
 				m_ping = (int) ((Time.time - m_sentTime)*1000);
@@ -175,6 +193,12 @@ public class SockjsClient {
 			}
 			else
 			{
+				if (m_wwwPolling.responseHeaders.ContainsKey("Set-Cookie"))
+				{
+					HttpHeader["Cookie"] = m_wwwPolling.responseHeaders["Set-Cookie"];
+					UpdateHeaders();
+				}
+
 				m_currentPollErrors = 0;
 
 				var response = m_wwwPolling.text;
@@ -299,6 +323,10 @@ public class SockjsClient {
 			m_wwwCurrentSending = null;
 			m_wwwPolling = null;
 
+			// remove old cookie
+			HttpHeader.Remove("Cookie");
+			UpdateHeaders();
+
 			m_outQueue.Clear();
 		}
 	}
@@ -348,7 +376,7 @@ public class SockjsClient {
 	{
 		//Debug.LogError("[sjs] sending: " + _data.Length);
 
-		m_wwwSendingObject = new WWW(m_xhr + "_send", _data, SendHeader);
+		m_wwwSendingObject = new WWW(m_xhr + "_send", _data, HttpHeader);
 
 		m_wwwCurrentSending = m_wwwSendingObject;
 
@@ -358,9 +386,9 @@ public class SockjsClient {
 	private void StartPoll()
 	{
 		if (m_wwwPolling == null)
-			m_wwwPolling = new WWW(m_xhr, PollPostData);
+			m_wwwPolling = new WWW(m_xhr, PollPostData, HttpHeader);
 		else
-			m_wwwPolling.InitWWW(m_xhr, PollPostData, PollHeaders);
+			m_wwwPolling.InitWWW(m_xhr, PollPostData, m_httpHeadersArray);
 
 		m_pollStartTime = Time.time;
 	}
